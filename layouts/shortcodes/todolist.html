@@ -1,0 +1,93 @@
+<div id="interactive-todolist" class="todolist-container">
+    <h2>{{ .Get "title" | default "待办清单" }}</h2>
+    <ul>
+        {{ $items := split .Inner "\n" }}
+        {{ range $index, $item := $items }}
+            {{ if ne (trim $item " ") "" }}
+            <li>
+                <input type="checkbox" id="todo-item-{{ $index }}" data-task="{{ trim $item " " }}">
+                <label for="todo-item-{{ $index }}">{{ trim $item " " | markdownify }}</label>
+            </li>
+            {{ end }}
+        {{ end }}
+    </ul>
+</div>
+
+<style>
+/* 这是一些基础的美化样式，您可以按需修改 */
+.todolist-container {
+    border: 1px solid #ddd;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 2em;
+}
+.todolist-container h2 {
+    margin-top: 0;
+}
+.todolist-container ul {
+    list-style: none;
+    padding-left: 0;
+}
+.todolist-container li {
+    font-size: 1.1em;
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+}
+.todolist-container input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+.todolist-container label {
+    cursor: pointer;
+    transition: color 0.3s;
+}
+.todolist-container input[type="checkbox"]:checked + label {
+    text-decoration: line-through;
+    color: #888;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const todoContainer = document.getElementById('interactive-todolist');
+    if (!todoContainer) return;
+
+    // 使用文章的路径作为独一无二的存储键，避免不同页面的清单互相干扰
+    const storageKey = 'todoListState_' + window.location.pathname;
+    const checkboxes = todoContainer.querySelectorAll('input[type="checkbox"]');
+
+    // 1. 加载状态
+    function loadState() {
+        const savedState = JSON.parse(localStorage.getItem(storageKey));
+        if (savedState) {
+            checkboxes.forEach(box => {
+                const taskText = box.dataset.task;
+                if (savedState[taskText]) {
+                    box.checked = true;
+                }
+            });
+        }
+    }
+
+    // 2. 保存状态
+    function saveState() {
+        let currentState = {};
+        checkboxes.forEach(box => {
+            const taskText = box.dataset.task;
+            currentState[taskText] = box.checked;
+        });
+        localStorage.setItem(storageKey, JSON.stringify(currentState));
+    }
+
+    // 3. 为每个复选框添加事件监听
+    checkboxes.forEach(box => {
+        box.addEventListener('change', saveState);
+    });
+
+    // 页面加载时，自动加载保存的状态
+    loadState();
+});
+</script>

@@ -1,0 +1,103 @@
+{{/* layouts/shortcodes/anchor-nav.html (compact & subtle) */}}
+{{- $accent := .Get "accent" | default "#d32f2f" -}}
+<style>
+  :root{
+    --ly-nav-accent: {{ $accent }};
+    --ly-nav-fg:#333;
+    --ly-nav-bg:rgba(255,255,255,.85);
+    --ly-nav-br:rgba(0,0,0,.08);
+    --ly-chip-fs:.9rem;
+    --ly-chip-pad-y:5px; --ly-chip-pad-x:12px;
+    --ly-chip-gap:6px;
+    --ly-chip-radius:20px;
+    --ly-scroll-margin:60px;
+  }
+
+  .ly-navbar{
+    position:sticky; top:8px; z-index:40;
+    display:flex; justify-content:center;
+    margin:8px auto 14px;
+    background:var(--ly-nav-bg);
+    backdrop-filter:blur(6px);
+    border:1px solid var(--ly-nav-br);
+    border-radius:12px;
+    max-width:max-content;  /* 根据内容自适应宽度 */
+    box-shadow:0 2px 6px rgba(0,0,0,.05);
+    padding:4px 8px;
+  }
+  .ly-navbar__wrap{
+    display:flex; gap:var(--ly-chip-gap);
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
+  .ly-chip{
+    padding:var(--ly-chip-pad-y) var(--ly-chip-pad-x);
+    font-size:var(--ly-chip-fs);
+    color:#555;
+    text-decoration:none;
+    border:1px solid var(--ly-nav-br);
+    border-radius:var(--ly-chip-radius);
+    background:#fff;
+    transition:.15s;
+  }
+  .ly-chip:hover{color:#111;border-color:rgba(0,0,0,.15)}
+  .ly-chip.is-active{
+    color:#000;font-weight:600;
+    border-color:var(--ly-nav-accent);
+    background:rgba(211,47,47,.06);
+  }
+
+  html{scroll-behavior:smooth}
+  [id]{scroll-margin-top:var(--ly-scroll-margin)}
+</style>
+
+<nav class="ly-navbar">
+  <div class="ly-navbar__wrap" data-ly-nav>
+    {{- $inner := trim .Inner "\n" -}}
+    {{- $lines := split $inner "\n" -}}
+    {{- range $lines -}}
+      {{- $p := split . "|" -}}
+      <a class="ly-chip" href="{{ index $p 1 | default "#" }}">{{ index $p 0 }}</a>
+    {{- end -}}
+  </div>
+</nav>
+
+<script>
+(function(){
+  if (window.__LY_ANCHOR_NAV__) return; window.__LY_ANCHOR_NAV__=true;
+  var wrap=document.querySelector('[data-ly-nav]');
+  if(!wrap) return;
+  var links=[].slice.call(wrap.querySelectorAll('a[href^="#"]'));
+  var ids=links.map(function(a){ return a.getAttribute('href').slice(1); }).filter(Boolean);
+  var secs=ids.map(function(id){ return document.getElementById(id); }).filter(Boolean);
+
+  function setActiveByHash(){
+    var h=decodeURIComponent(location.hash||'').replace('#','');
+    links.forEach(function(a){ a.classList.toggle('is-active', a.getAttribute('href').slice(1)===h); });
+  }
+
+  // 滚动高亮：离视口顶部最近且已进入的区块高亮
+  var ticking=false;
+  function onScroll(){
+    if(ticking) return; ticking=true;
+    requestAnimationFrame(function(){
+      var top=window.scrollY, vh=window.innerHeight;
+      var bestId=null, bestDist=1e9;
+      secs.forEach(function(el, i){
+        var rect=el.getBoundingClientRect();
+        var d=Math.abs(rect.top);    // 与视口顶部距离
+        if(rect.top<vh*0.5 && d<bestDist){ bestDist=d; bestId=ids[i]; }
+      });
+      if(bestId){
+        links.forEach(function(a){ a.classList.toggle('is-active', a.getAttribute('href').slice(1)===bestId); });
+      }
+      ticking=false;
+    });
+  }
+
+  window.addEventListener('hashchange', setActiveByHash, {passive:true});
+  window.addEventListener('scroll', onScroll, {passive:true});
+  setActiveByHash(); onScroll();
+})();
+</script>

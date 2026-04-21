@@ -1,0 +1,11 @@
+baseURL = 'https://luckyou.asia'
+languageCode = 'zh-cn'
+title = '阿辉的博客'
+theme = 'ananke'
+
+[markup.goldmark.renderer]
+
+# 允许Goldmark渲染器解析和渲染原始HTML标签
+unsafe = true
+# 忽略原始HTML警告
+ignoreLogs = ['warning-goldmark-raw-html']
