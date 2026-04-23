@@ -33,12 +33,13 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          test -n "${{ secrets.SERVER_HOST }}"
+          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Deploy to server
         run: |
-          rsync -avz --delete public/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519" public/ "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/"
 
       - name: Fix permissions and reload nginx
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "chown -R www-data:www-data /var/www/html && nginx -t && systemctl reload nginx"
+          ssh -i ~/.ssh/id_ed25519 "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" "chown -R www-data:www-data /var/www/html && nginx -t && systemctl reload nginx"
