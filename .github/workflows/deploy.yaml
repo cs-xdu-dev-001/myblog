@@ -21,7 +21,7 @@ jobs:
           # 如果你的仓库里有 git submodule，就一起拉下来，而且递归拉取。你这里是为了把 Hugo 主题 ananke 也一起拿到
           submodules: recursive
           fetch-depth: 0
-
+      # 之所以安装hugo，是因为但每次启动actions，都是全新的
       - name: Install Hugo
         run: |
           HUGO_VERSION=0.150.1
@@ -43,8 +43,9 @@ jobs:
 
       - name: Deploy to server
         run: |
+          # 这是文件同步工具，比 scp 更适合部署静态网站
           rsync -avz --delete -e 'ssh -i ~/.ssh/id_ed25519' public/ "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html"
-
+      # 修正权限并重载 Nginx
       - name: Fix permissions and reload nginx
         run: |
           ssh -i ~/.ssh/id_ed25519 "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" 'chown -R www-data:www-data /var/www/html && nginx -t && systemctl reload nginx'
