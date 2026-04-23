@@ -1,19 +1,24 @@
 name: Deploy Hugo Blog
-
+# 下面定义触发条件
 on:
   push:
     branches:
       - main
+  # 除了 push 自动触发之外，也允许你在 GitHub 网页里手动点 Run workflow 来执行
   workflow_dispatch:
-
+  
+# 下面开始定义有哪些任务
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source
+        # 调用官方写好的
         uses: actions/checkout@v4
+        # 给 actions/checkout 传参数
         with:
+          # 如果你的仓库里有 git submodule，就一起拉下来，而且递归拉取。你这里是为了把 Hugo 主题 ananke 也一起拿到
           submodules: recursive
           fetch-depth: 0
 
